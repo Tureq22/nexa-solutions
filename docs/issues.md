@@ -16,6 +16,8 @@ A empresa encaminhou as demandas abaixo. A dupla deve criar, organizar e acompan
 - A resposta deve informar claramente que o título é obrigatório.
 - Deve existir teste automatizado para esse caso.
 
+## REALIZADA COM SUCESSO ##
+
 ## INC-02 — Filtrar chamados por status
 
 **Relato:** a equipe de suporte precisa consultar apenas chamados abertos, em andamento ou concluídos.
