@@ -1,14 +1,19 @@
 from pathlib import Path
 import os
-from pathlib import Path
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-nexa-solutions-chave-exposta-nao-usar-em-producao"
+api_key = os.getenv("SECRET_KEY")
 
-DEBUG = True
+debug = os.getenv("DEBUG")
 
-ALLOWED_HOSTS = []
+hosts_raw = os.getenv("ALLOWED_HOSTS", "")
+
+allowed_hosts = [host.strip() for host in hosts_raw.split(",") if host]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
