@@ -75,6 +75,15 @@ Depois abra o `.env` e ajuste os valores. Variáveis disponíveis:
 ```bash
 docker compose up --build
 ```
+Na primeira execução o container aguarda o PostgreSQL ficar disponível e aplica
+as migrações automaticamente antes de subir o servidor.
+
+Os dados ficam em um volume nomeado (`postgres_data`) e sobrevivem ao
+`docker compose down`. Para apagar o banco junto:
+
+```bash
+docker compose down -v
+```
 
 Para rodar em segundo plano, parar e ver logs:
 
@@ -92,9 +101,9 @@ docker compose exec api python manage.py createsuperuser
 docker compose exec api python manage.py test
 ```
 
-> ⚠️ **Pendência (INC-04):** o `Dockerfile` ainda não instala as dependências do
-> `requirements.txt` e o `docker-compose.yml` não sobe o serviço de banco de
-> dados. Até o INC-04 ser concluído, use a execução local descrita abaixo.
+> As variáveis de banco (`POSTGRES_*`) já são consumidas pela aplicação.
+> `DJANGO_SECRET_KEY`, `DEBUG` e `ALLOWED_HOSTS` ainda usam valores fixos no
+> `settings.py` — pendência do INC-05.
 
 ## Executar localmente
 
@@ -110,16 +119,12 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
-python manage.py makemigrations chamados
 python manage.py migrate
 
 python manage.py runserver
 ```
 
 A API fica disponível em `http://localhost:8000/api/chamados/`.
-
-> O passo `makemigrations chamados` é obrigatório no primeiro uso: o app ainda
-> não possui migrações versionadas, e sem ele a tabela de chamados não é criada.
 
 Para acessar o painel administrativo, crie um usuário:
 
