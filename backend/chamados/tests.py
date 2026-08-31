@@ -4,6 +4,74 @@ from rest_framework.test import APITestCase
 
 from .models import Chamado
 
+class CriacaoChamadoTests(APITestCase):
+    def setUp(self):
+        self.url = reverse("chamado-list-create")
+
+    def test_cria_chamado_valido_retorna_201(self):
+        dados = {
+            "titulo": "Impressora sem tinta",
+            "descricao": "Impressora do setor financeiro sem toner.",
+            "status": "ABERTO",
+        }
+
+        resposta = self.client.post(self.url, dados, format="json")
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_201_CREATED)
+        self.assertEqual(resposta.data["titulo"], "Impressora sem tinta")
+        self.assertEqual(resposta.data["status"], "ABERTO")
+
+    def test_chamado_valido_e_persistido(self):
+        dados = {"titulo": "VPN fora do ar", "descricao": "Sem acesso remoto."}
+
+        self.client.post(self.url, dados, format="json")
+
+        self.assertEqual(Chamado.objects.count(), 1)
+        self.assertEqual(Chamado.objects.first().titulo, "VPN fora do ar")
+
+    def test_chamado_criado_sem_status_assume_aberto(self):
+        resposta = self.client.post(
+            self.url, {"titulo": "Troca de teclado"}, format="json"
+        )
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_201_CREATED)
+        self.assertEqual(resposta.data["status"], Chamado.Status.ABERTO)
+
+    def test_criacao_sem_titulo_retorna_400(self):
+        resposta = self.client.post(
+            self.url, {"descricao": "Sem título."}, format="json"
+        )
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_400_BAD_REQUEST)
+        self.assertIn("titulo", resposta.data)
+
+    def test_criacao_com_titulo_em_branco_retorna_400(self):
+        resposta = self.client.post(
+            self.url, {"titulo": "", "descricao": "Título vazio."}, format="json"
+        )
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_400_BAD_REQUEST)
+        self.assertIn("titulo", resposta.data)
+
+    def test_criacao_sem_titulo_nao_persiste_chamado(self):
+        self.client.post(self.url, {"descricao": "Sem título."}, format="json")
+
+        self.assertEqual(Chamado.objects.count(), 0)
+
+    def test_mensagem_de_erro_informa_que_titulo_e_obrigatorio(self):
+        resposta = self.client.post(self.url, {}, format="json")
+
+        mensagem = str(resposta.data["titulo"][0])
+        self.assertIn("título", mensagem.lower())
+
+    def test_criacao_com_status_invalido_retorna_400(self):
+        dados = {"titulo": "Chamado qualquer", "status": "CANCELADO"}
+
+        resposta = self.client.post(self.url, dados, format="json")
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_400_BAD_REQUEST)
+        self.assertIn("status", resposta.data)
+
 class FiltroChamadosporStatusTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
