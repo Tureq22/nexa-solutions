@@ -9,7 +9,7 @@ Projeto da disciplina de Manutenção e Evolução de Software.
 - Python 3.12
 - Django 5.x
 - Django REST Framework 3.15+
-- SQLite (desenvolvimento)
+- PostgreSQL 16
 - Docker e Docker Compose
 - Git
 
@@ -18,15 +18,25 @@ Projeto da disciplina de Manutenção e Evolução de Software.
 ```text
 nexa-solutions/
 ├── backend/
-│   ├── config/          # settings, urls, wsgi/asgi
-│   ├── chamados/        # app principal (model, views, serializer, testes)
+│   ├── config/              # settings, urls, wsgi/asgi
+│   ├── chamados/            # app principal
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── tests.py
 │   ├── requirements.txt
 │   └── manage.py
+├── docker/
+│   └── entrypoint.sh        # espera o banco e aplica migrações
 ├── frontend/
-│   └── index.html       # interface simples que consome a API
+│   └── index.html           # interface simples que consome a API
 ├── docs/
-│   └── issues.md        # demandas da empresa
+│   └── issues.md            # demandas da empresa
 ├── .env.example
+├── .gitattributes
+├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yml
 └── README.md
@@ -34,9 +44,9 @@ nexa-solutions/
 
 ## Pré-requisitos
 
-- Python 3.12 ou superior
+- Docker e Docker Compose (forma recomendada de execução)
+- Python 3.12 ou superior (apenas para execução local)
 - Git
-- Docker e Docker Compose (para execução containerizada)
 
 ## Configuração das variáveis de ambiente
 
@@ -66,31 +76,38 @@ Depois abra o `.env` e ajuste os valores. Variáveis disponíveis:
 | `POSTGRES_HOST` | Host do banco | `db` |
 | `POSTGRES_PORT` | Porta do banco | `5432` |
 
-> ⚠️ **Pendência (INC-05):** o `settings.py` ainda usa valores fixos no código e
-> não lê essas variáveis. O `.env` já deve ser criado, mas só passará a ter
-> efeito após a conclusão do INC-05.
+> ⚠️ **Pendência (INC-05):** as variáveis `POSTGRES_*` já são consumidas pela
+> aplicação, mas `DJANGO_SECRET_KEY`, `DEBUG` e `ALLOWED_HOSTS` ainda usam
+> valores fixos no `settings.py`.
 
 ## Executar com Docker
+
+Forma recomendada. Com o `.env` criado:
 
 ```bash
 docker compose up --build
 ```
-Na primeira execução o container aguarda o PostgreSQL ficar disponível e aplica
-as migrações automaticamente antes de subir o servidor.
 
-Os dados ficam em um volume nomeado (`postgres_data`) e sobrevivem ao
-`docker compose down`. Para apagar o banco junto:
+O ambiente sobe dois serviços: `db` (PostgreSQL 16) e `api` (Django). O
+container da aplicação aguarda o banco ficar disponível e aplica as migrações
+automaticamente antes de iniciar o servidor.
 
-```bash
-docker compose down -v
-```
+A API fica em `http://localhost:8000/api/chamados/`.
 
-Para rodar em segundo plano, parar e ver logs:
+Comandos úteis:
 
 ```bash
+# em segundo plano
 docker compose up -d --build
+
+# acompanhar os logs da aplicação
 docker compose logs -f api
+
+# parar os containers (os dados do banco são preservados)
 docker compose down
+
+# parar e apagar também o volume do banco
+docker compose down -v
 ```
 
 Comandos do Django dentro do container:
@@ -101,11 +118,13 @@ docker compose exec api python manage.py createsuperuser
 docker compose exec api python manage.py test
 ```
 
-> As variáveis de banco (`POSTGRES_*`) já são consumidas pela aplicação.
-> `DJANGO_SECRET_KEY`, `DEBUG` e `ALLOWED_HOSTS` ainda usam valores fixos no
-> `settings.py` — pendência do INC-05.
+Os dados do PostgreSQL ficam em um volume nomeado (`postgres_data`) e
+sobrevivem ao `docker compose down`.
 
 ## Executar localmente
+
+Alternativa para desenvolvimento sem Docker. Nesse modo a aplicação usa SQLite,
+porque a variável `POSTGRES_HOST` não está definida no ambiente.
 
 ```bash
 cd backend
@@ -120,11 +139,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 python manage.py migrate
-
 python manage.py runserver
 ```
 
-A API fica disponível em `http://localhost:8000/api/chamados/`.
+A API fica em `http://localhost:8000/api/chamados/`.
 
 Para acessar o painel administrativo, crie um usuário:
 
@@ -147,16 +165,25 @@ python manage.py test chamados -v 2
 
 # uma classe ou um teste específico
 python manage.py test chamados.tests.FiltroChamadosPorStatusTests
+python manage.py test chamados.tests.CriacaoChamadoTests.test_criacao_sem_titulo_retorna_400
 ```
-
-Os testes usam um banco de dados temporário, criado e destruído
-automaticamente. O banco de desenvolvimento não é afetado.
 
 No Docker:
 
 ```bash
 docker compose exec api python manage.py test
 ```
+
+Os testes usam um banco de dados temporário, criado e destruído
+automaticamente. O banco de desenvolvimento não é afetado.
+
+O conjunto está em `backend/chamados/tests.py` e cobre:
+
+| Classe | Cobertura |
+| --- | --- |
+| `CriacaoChamadoTests` | Criação válida, título obrigatório, status padrão e status inválido |
+| `FiltroChamadosPorStatusTests` | Filtro por status, valores inválidos e parâmetro vazio |
+| `IndicadoresTests` | Totais por status, cenário vazio e consistência da soma |
 
 ## Endpoints
 
@@ -170,35 +197,18 @@ Base: `http://localhost:8000/api/`
 | `GET` | `/api/chamados/<id>/` | Consulta um chamado específico |
 | `PUT` | `/api/chamados/<id>/` | Atualiza todos os campos de um chamado |
 | `PATCH` | `/api/chamados/<id>/` | Atualiza parcialmente um chamado |
+| `GET` | `/api/indicadores/` | Totais de chamados por status |
 
 ### Campos do chamado
 
 | Campo | Tipo | Observação |
 | --- | --- | --- |
 | `id` | inteiro | Somente leitura |
-| `titulo` | texto (até 150) | Identificação curta do chamado |
-| `descricao` | texto | Detalhamento do problema |
+| `titulo` | texto (até 150) | **Obrigatório**, não pode ficar em branco |
+| `descricao` | texto | Detalhamento do problema, opcional |
 | `status` | texto | `ABERTO`, `EM_ANDAMENTO` ou `CONCLUIDO` (padrão: `ABERTO`) |
 | `criado_em` | data/hora | Somente leitura |
 | `atualizado_em` | data/hora | Somente leitura |
-
-### Filtro por status
-
-O parâmetro `status` é opcional e aceita os valores `ABERTO`, `EM_ANDAMENTO` e
-`CONCLUIDO`. O valor não diferencia maiúsculas de minúsculas. Quando o
-parâmetro é omitido ou enviado vazio, todos os chamados são retornados.
-
-```bash
-curl "http://localhost:8000/api/chamados/?status=ABERTO"
-```
-
-Um status inexistente retorna `400 Bad Request`:
-
-```json
-{
-  "status": ["Status inválido. Valores aceitos: ABERTO, EM_ANDAMENTO, CONCLUIDO."]
-}
-```
 
 ### Criar um chamado
 
@@ -221,6 +231,51 @@ Resposta `201 Created`:
 }
 ```
 
+Uma requisição sem título retorna `400 Bad Request`:
+
+```json
+{
+  "titulo": ["O título do chamado é obrigatório."]
+}
+```
+
+### Filtro por status
+
+O parâmetro `status` é opcional e aceita os valores `ABERTO`, `EM_ANDAMENTO` e
+`CONCLUIDO`. O valor não diferencia maiúsculas de minúsculas. Quando o
+parâmetro é omitido ou enviado vazio, todos os chamados são retornados.
+
+```bash
+curl "http://localhost:8000/api/chamados/?status=ABERTO"
+```
+
+Um status inexistente retorna `400 Bad Request`:
+
+```json
+{
+  "status": ["Status inválido. Valores aceitos: ABERTO, EM_ANDAMENTO, CONCLUIDO."]
+}
+```
+
+### Indicadores
+
+Retorna a contagem de chamados agrupada por status.
+
+```bash
+curl http://localhost:8000/api/indicadores/
+```
+
+Resposta `200 OK`:
+
+```json
+{
+  "total": 6,
+  "abertos": 2,
+  "em_andamento": 1,
+  "concluidos": 3
+}
+```
+
 ## Interface HTML
 
 O arquivo `frontend/index.html` consome a API em
@@ -232,12 +287,19 @@ arquivo no navegador. Se a porta do backend for alterada, ajuste a constante
 
 O acompanhamento completo está em [`docs/issues.md`](docs/issues.md).
 
-| Demanda | Situação |
-| --- | --- |
-| INC-01 — Cadastro sem título | Pendente |
-| INC-02 — Filtro por status | Concluída |
-| INC-03 — Documentação | Concluída |
-| INC-04 — Ambiente Docker | Pendente |
-| INC-05 — Configurações sensíveis | Pendente |
-| INC-06 — Indicadores | Pendente |
-| INC-07 — Testes automatizados | Parcial (filtro por status coberto) |
+| Demanda | Classificação | Situação |
+| --- | --- | --- |
+| INC-01 — Cadastro sem título | Corretiva | Concluída |
+| INC-02 — Filtro por status | Evolutiva | Concluída |
+| INC-03 — Documentação | Preventiva | Concluída |
+| INC-04 — Ambiente Docker | Adaptativa / preventiva | Concluída |
+| INC-05 — Configurações sensíveis | Preventiva | Pendente |
+| INC-06 — Indicadores | Evolutiva | Concluída |
+| INC-07 — Testes automatizados | Preventiva | Concluída |
+
+## Convenções do repositório
+
+- Uma branch por issue, nomeada com o identificador da demanda
+  (ex.: `inc-02-filtro-status`).
+- Cada branch é integrada por Pull Request, referenciando a issue correspondente.
+- Arquivos `.sh` usam quebra de linha LF, garantida pelo `.gitattributes`.
