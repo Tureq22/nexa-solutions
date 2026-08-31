@@ -21,3 +21,14 @@ class ChamadoSerializer(serializers.ModelSerializer):
             "criado_em",
             "atualizado_em",
         ]
+        extra_kwargs = {
+            "titulo": {
+                "required": True,
+                "allow_blank": False,
+                "error_messages": {
+                    "required": "O título do chamado é obrigatório.",
+                    "blank": "O título do chamado não pode ficar em branco.",
+                    "null": "O título do chamado é obrigatório.",
+                },
+            },
+        }
