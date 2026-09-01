@@ -56,7 +56,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# Falha intencional: banco local SQLite.
+# Falha intencional: banco local SQLite
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
