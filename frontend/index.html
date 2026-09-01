@@ -139,8 +139,9 @@
           </div>
 
         </div>
+        <div id="lista-chamados"> </div>
         <button id="atualizar" class="cadastrar_chamado">Atualizar Chamados</button>
-        <div id="lista-chamados"></div>
+        
     </section>
   </div>
 
@@ -149,36 +150,34 @@
 
   <script>
 
-    const API_URL = "http://127.0.0.1:8000/chamados/";
+    const API_URL = "http://127.0.0.1:8000/api/chamados/";
 
 
-    // ==========================================
-    // ATUALIZAR OS CARDS
-    // ==========================================
+
 
     function atualizarCards(chamados) {
 
-      // Total de chamados
+
       const total = chamados.length;
 
 
-      // Chamados em andamento
+
       const emAndamento = chamados.filter(
         chamado => chamado.status === "EM_ANDAMENTO"
       ).length;
 
 
-      // Chamados concluídos
+
       const concluidos = chamados.filter(
         chamado => chamado.status === "CONCLUIDO"
       ).length;
 
 
-      // Data de hoje
+
       const hoje = new Date().toISOString().split("T")[0];
 
 
-      // Chamados abertos hoje
+
       const abertosHoje = chamados.filter(chamado => {
 
         if (!chamado.criado_em) {
@@ -193,7 +192,7 @@
       }).length;
 
 
-      // Atualizar os números dos cards
+
       document.getElementById("total-chamados").textContent = total;
 
       document.getElementById("em-andamento").textContent = emAndamento;
@@ -204,9 +203,7 @@
     }
 
 
-    // ==========================================
-    // LISTAR CHAMADOS
-    // ==========================================
+
 
     async function listarChamados() {
 
@@ -221,11 +218,11 @@
         const chamados = await resposta.json();
 
 
-        // Atualiza os cards
+
         atualizarCards(chamados);
 
 
-        // Se não houver chamados
+
         if (chamados.length === 0) {
 
           lista.innerHTML =
@@ -235,26 +232,49 @@
         }
 
 
-        // Criar a lista de chamados
-        lista.innerHTML = chamados.map((chamado) => `
+        lista.innerHTML = `
+  <div class="tabela-chamados">
 
-        <article>
+    <div class="linha linha-cabecalho">
+      <div>ID</div>
+      <div>Título</div>
+      <div>Status</div>
+      <div>Criado em</div>
+    </div>
 
-          <strong>
-            #${chamado.id} — ${chamado.titulo || "Sem título"}
-          </strong>
+    ${chamados.map((chamado) => `
+      
+      <div class="linha">
 
-          <p>
-            ${chamado.descricao || "Sem descrição"}
-          </p>
+        <div class="coluna-id">
+          ${chamado.id}
+        </div>
 
-          <p>
-            Status: ${chamado.status}
-          </p>
+        <div class="coluna-titulo">
+          ${chamado.titulo || "Sem título"}
+        </div>
 
-        </article>
+        <div>
+          <span class="status ${chamado.status}">
+            ${chamado.status.replace("_", " ")}
+          </span>
+        </div>
 
-      `).join("");
+        <div class="coluna-data">
+          ${chamado.criado_em || "Sem data"}
+        </div>
+
+      </div>
+
+    `).join("")}
+
+  </div>
+`;
+
+        `).join("")}
+
+  </div>
+`;
 
       } catch (erro) {
 
@@ -265,9 +285,7 @@
     }
 
 
-    // ==========================================
-    // CADASTRAR CHAMADO
-    // ==========================================
+
 
     document.getElementById("form-chamado")
       .addEventListener("submit", async (evento) => {
@@ -324,11 +342,11 @@
             "Chamado cadastrado com sucesso.";
 
 
-          // Limpar formulário
+
           document.getElementById("form-chamado").reset();
 
 
-          // Atualizar lista e cards
+
           listarChamados();
 
         } catch (erro) {
@@ -343,17 +361,13 @@
       });
 
 
-    // ==========================================
-    // BOTÃO ATUALIZAR
-    // ==========================================
+
 
     document.getElementById("atualizar")
       .addEventListener("click", listarChamados);
 
 
-    // ==========================================
-    // CARREGAR CHAMADOS AO ABRIR A PÁGINA
-    // ==========================================
+
 
     listarChamados();
 
