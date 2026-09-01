@@ -4,6 +4,74 @@ from rest_framework.test import APITestCase
 
 from .models import Chamado
 
+class CriacaoChamadoTests(APITestCase):
+    def setUp(self):
+        self.url = reverse("chamado-list-create")
+
+    def test_cria_chamado_valido_retorna_201(self):
+        dados = {
+            "titulo": "Impressora sem tinta",
+            "descricao": "Impressora do setor financeiro sem toner.",
+            "status": "ABERTO",
+        }
+
+        resposta = self.client.post(self.url, dados, format="json")
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_201_CREATED)
+        self.assertEqual(resposta.data["titulo"], "Impressora sem tinta")
+        self.assertEqual(resposta.data["status"], "ABERTO")
+
+    def test_chamado_valido_e_persistido(self):
+        dados = {"titulo": "VPN fora do ar", "descricao": "Sem acesso remoto."}
+
+        self.client.post(self.url, dados, format="json")
+
+        self.assertEqual(Chamado.objects.count(), 1)
+        self.assertEqual(Chamado.objects.first().titulo, "VPN fora do ar")
+
+    def test_chamado_criado_sem_status_assume_aberto(self):
+        resposta = self.client.post(
+            self.url, {"titulo": "Troca de teclado"}, format="json"
+        )
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_201_CREATED)
+        self.assertEqual(resposta.data["status"], Chamado.Status.ABERTO)
+
+    def test_criacao_sem_titulo_retorna_400(self):
+        resposta = self.client.post(
+            self.url, {"descricao": "Sem título."}, format="json"
+        )
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_400_BAD_REQUEST)
+        self.assertIn("titulo", resposta.data)
+
+    def test_criacao_com_titulo_em_branco_retorna_400(self):
+        resposta = self.client.post(
+            self.url, {"titulo": "", "descricao": "Título vazio."}, format="json"
+        )
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_400_BAD_REQUEST)
+        self.assertIn("titulo", resposta.data)
+
+    def test_criacao_sem_titulo_nao_persiste_chamado(self):
+        self.client.post(self.url, {"descricao": "Sem título."}, format="json")
+
+        self.assertEqual(Chamado.objects.count(), 0)
+
+    def test_mensagem_de_erro_informa_que_titulo_e_obrigatorio(self):
+        resposta = self.client.post(self.url, {}, format="json")
+
+        mensagem = str(resposta.data["titulo"][0])
+        self.assertIn("título", mensagem.lower())
+
+    def test_criacao_com_status_invalido_retorna_400(self):
+        dados = {"titulo": "Chamado qualquer", "status": "CANCELADO"}
+
+        resposta = self.client.post(self.url, dados, format="json")
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_400_BAD_REQUEST)
+        self.assertIn("status", resposta.data)
+
 class FiltroChamadosporStatusTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -53,3 +121,55 @@ class FiltroChamadosporStatusTests(APITestCase):
 
         self.assertEqual(resposta.status_code, http_status.HTTP_200_OK)
         self.assertEqual(len(resposta.data), 4)
+
+class IndicadoresTests(APITestCase):
+    def setUp(self):
+        self.url = reverse("indicadores")
+
+    def test_sem_chamados_retorna_todos_os_totais_zerados(self):
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_200_OK)
+        self.assertEqual(
+            resposta.data,
+            {"total": 0, "abertos": 0, "em_andamento": 0, "concluidos": 0},
+        )
+
+    def test_retorna_totais_por_status(self):
+        Chamado.objects.create(titulo="A", status=Chamado.Status.ABERTO)
+        Chamado.objects.create(titulo="B", status=Chamado.Status.ABERTO)
+        Chamado.objects.create(titulo="C", status=Chamado.Status.EM_ANDAMENTO)
+        Chamado.objects.create(titulo="D", status=Chamado.Status.CONCLUIDO)
+        Chamado.objects.create(titulo="E", status=Chamado.Status.CONCLUIDO)
+        Chamado.objects.create(titulo="F", status=Chamado.Status.CONCLUIDO)
+
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_200_OK)
+        self.assertEqual(resposta.data["total"], 6)
+        self.assertEqual(resposta.data["abertos"], 2)
+        self.assertEqual(resposta.data["em_andamento"], 1)
+        self.assertEqual(resposta.data["concluidos"], 3)
+
+    def test_soma_dos_status_corresponde_ao_total(self):
+        Chamado.objects.create(titulo="A", status=Chamado.Status.ABERTO)
+        Chamado.objects.create(titulo="B", status=Chamado.Status.EM_ANDAMENTO)
+        Chamado.objects.create(titulo="C", status=Chamado.Status.CONCLUIDO)
+
+        resposta = self.client.get(self.url)
+        dados = resposta.data
+
+        soma = dados["abertos"] + dados["em_andamento"] + dados["concluidos"]
+        self.assertEqual(soma, dados["total"])
+
+    def test_indicadores_refletem_novo_chamado(self):
+        self.client.post(
+            reverse("chamado-list-create"),
+            {"titulo": "Novo", "status": "ABERTO"},
+            format="json",
+        )
+
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.data["total"], 1)
+        self.assertEqual(resposta.data["abertos"], 1)
