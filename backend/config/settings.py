@@ -7,13 +7,17 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-api_key = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-debug = os.getenv("DEBUG")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 hosts_raw = os.getenv("ALLOWED_HOSTS", "")
 
-allowed_hosts = [host.strip() for host in hosts_raw.split(",") if host]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in hosts_raw.split(",")
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -22,12 +26,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "chamados",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -56,23 +62,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-if os.environ.get("POSTGRES_HOST"):
-    DATABASES = {
-        "default":{
-            "ENGINE": "django.db.backend.postgresql",
-            "NAME": os.environ.get("POSTGRES_DB", "nexa_chamados"),
-            "USER": os.environ.get("POSTGRES_USER", "nexa_user"),
-            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
-            "HOST": os.environ.get("POSTGRES_HOST"),
-            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
-        }
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backend.sqlite3",
-            "NAME": BASE_DIR / "db_sqlite3",
-        }
+# Falha intencional: banco local SQLite
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 
 AUTH_PASSWORD_VALIDATORS = []
@@ -91,3 +85,5 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.BrowsableAPIRenderer",
     ]
 }
+
+CORS_ALLOW_ALL_ORIGINS = True

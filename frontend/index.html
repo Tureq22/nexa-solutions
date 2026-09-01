@@ -1,163 +1,377 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexa Solutions — Chamados</title>
-  <style>
-    body {
-      max-width: 960px;
-      margin: 40px auto;
-      padding: 0 16px;
-      font-family: Arial, sans-serif;
-      color: #1f2937;
-    }
-
-    h1, h2 {
-      color: #1d4ed8;
-    }
-
-    form, article {
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-
-    label, input, textarea, select, button {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      margin-top: 8px;
-      margin-bottom: 14px;
-    }
-
-    input, textarea, select {
-      padding: 10px;
-      border: 1px solid #9ca3af;
-      border-radius: 4px;
-    }
-
-    button {
-      width: auto;
-      padding: 10px 16px;
-      background: #1d4ed8;
-      color: white;
-      border: 0;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .erro {
-      color: #b91c1c;
-      font-weight: bold;
-    }
-
-    .sucesso {
-      color: #166534;
-      font-weight: bold;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
+
 <body>
-  <h1>Sistema de Chamados</h1>
-  <p>Interface inicial da Nexa Solutions.</p>
 
-  <section>
-    <h2>Abrir chamado</h2>
+  <div id="header">
+    <p id="titulo_header">Sistema de Chamados</p>
+    <p id="subtitulo_header">Nexa Solutions</p>
+    <h1 class="titulo_simbol">Nexa Solutions</h1>
+  </div>
 
-    <form id="form-chamado">
-      <label for="titulo">Título</label>
-      <input id="titulo" name="titulo" type="text">
+  <div class="cards-chamados">
 
-      <label for="descricao">Descrição</label>
-      <textarea id="descricao" name="descricao"></textarea>
+    <div class="card">
+      <div class="icone icone-roxo">
+        📄
+      </div>
+      <div class="card-info">
+        <h2 id="total-chamados">0</h2>
+        <p class="titulo">Total de chamados</p>
+        <p class="descricao">Todos os registros</p>
+      </div>
+    </div>
 
-      <label for="status">Status</label>
-      <select id="status" name="status">
-        <option value="ABERTO">Aberto</option>
-        <option value="EM_ANDAMENTO">Em andamento</option>
-        <option value="CONCLUIDO">Concluído</option>
-      </select>
+    <div class="card">
+      <div class="icone icone-amarelo">
+        ◷
+      </div>
+      <div class="card-info">
+        <h2 id="em-andamento">0</h2>
+        <p class="titulo">Em andamento</p>
+        <p class="descricao">Aguardando resposta</p>
+      </div>
+    </div>
 
-      <button type="submit">Cadastrar chamado</button>
-    </form>
+    <div class="card">
+      <div class="icone icone-verde">
+        ✓
+      </div>
+      <div class="card-info">
+        <h2 id="chamado-finalizado">0</h2>
+        <p class="titulo">Concluído</p>
+        <p class="descricao">Chamados finalizados</p>
+      </div>
+    </div>
 
-    <p id="mensagem"></p>
-  </section>
+    <div class="card">
+      <div class="icone icone-vermelho">
+        ⚠
+      </div>
+      <div class="card-info">
+        <h2 id="aberto-hoje">0</h2>
+        <p class="titulo">Abertos hoje</p>
+        <p class="descricao">Novos chamados</p>
+      </div>
+    </div>
 
-  <section>
-    <h2>Chamados cadastrados</h2>
-    <button id="atualizar">Atualizar lista</button>
-    <div id="lista-chamados"></div>
-  </section>
+  </div>
+
+  <div class="container">
+    <section id="abrir_chamado">
+
+      <form class="form_chamado" id="form-chamado">
+
+        <div class="titulo-formulario">
+
+          <div class="icone-novo-chamado">
+            +
+          </div>
+
+          <div class="texto-novo-chamado">
+            <h2>Abrir novo chamado</h2>
+            <p>Preencha os dados abaixo para abrir um chamado.</p>
+          </div>
+
+        </div>
+
+        <hr style="border: 1px solid #5A4886;">
+
+        <label for="titulo" class="Subtitulo_chamado">Título</label>
+        <input id="titulo" name="titulo" type="text" required>
+
+        <label for="descricao" class="Subtitulo_chamado">Descrição</label>
+        <textarea id="descricao" name="descricao" required></textarea>
+
+        <label for="status" class="Subtitulo_chamado">Status</label>
+        <select id="status" name="status">
+          <option value="ABERTO">Aberto</option>
+          <option value="EM_ANDAMENTO">Em andamento</option>
+          <option value="CONCLUIDO">Concluído</option>
+        </select>
+
+        <button type="submit" class="cadastrar_chamado">Cadastrar chamado</button>
+      </form>
+
+      <p id="mensagem"></p>
+    </section>
+
+    <section class="container_lista_chamados">
+      <div>
+        <div class="cabecalho-chamados">
+
+          <!-- Lado esquerdo -->
+          <div class="titulo-chamados">
+
+            <div class="icone-principal">
+              <i class="bi bi-list-ul"></i>
+            </div>
+
+            <div class="texto-titulo">
+              <h2>Chamados</h2>
+              <p>Acompanhe seus chamados cadastrados.</p>
+            </div>
+
+          </div>
+
+
+          <!-- Lado direito -->
+          <div class="acoes">
+
+            <div class="campo-busca">
+              <i class="bi bi-search"></i>
+
+              <input type="text" placeholder="Buscar chamados...">
+            </div>
+
+            <button class="botao-filtro">
+              <i class="bi bi-funnel"></i>
+            </button>
+
+          </div>
+
+        </div>
+        <div id="lista-chamados"> </div>
+        <button id="atualizar" class="cadastrar_chamado">Atualizar Chamados</button>
+        
+    </section>
+  </div>
+
+
+
 
   <script>
-    const API_URL = "http://localhost:8000/api/chamados/";
+
+    const API_URL = "http://127.0.0.1:8000/api/chamados/";
+
+
+
+
+    function atualizarCards(chamados) {
+
+
+      const total = chamados.length;
+
+
+
+      const emAndamento = chamados.filter(
+        chamado => chamado.status === "EM_ANDAMENTO"
+      ).length;
+
+
+
+      const concluidos = chamados.filter(
+        chamado => chamado.status === "CONCLUIDO"
+      ).length;
+
+
+
+      const hoje = new Date().toISOString().split("T")[0];
+
+
+
+      const abertosHoje = chamados.filter(chamado => {
+
+        if (!chamado.criado_em) {
+          return false;
+        }
+
+        const dataChamado =
+          chamado.criado_em.split("T")[0];
+
+        return dataChamado === hoje;
+
+      }).length;
+
+
+
+      document.getElementById("total-chamados").textContent = total;
+
+      document.getElementById("em-andamento").textContent = emAndamento;
+
+      document.getElementById("chamado-finalizado").textContent = concluidos;
+
+      document.getElementById("aberto-hoje").textContent = abertosHoje;
+    }
+
+
+
 
     async function listarChamados() {
+
       const lista = document.getElementById("lista-chamados");
+
       lista.innerHTML = "<p>Carregando...</p>";
 
       try {
+
         const resposta = await fetch(API_URL);
+
         const chamados = await resposta.json();
 
+
+
+        atualizarCards(chamados);
+
+
+
         if (chamados.length === 0) {
-          lista.innerHTML = "<p>Nenhum chamado cadastrado.</p>";
+
+          lista.innerHTML =
+            "<p>Nenhum chamado cadastrado.</p>";
+
           return;
         }
 
-        lista.innerHTML = chamados.map((chamado) => `
-          <article>
-            <strong>#${chamado.id} — ${chamado.titulo || "Sem título"}</strong>
-            <p>${chamado.descricao || "Sem descrição"}</p>
-            <p>Status: ${chamado.status}</p>
-          </article>
-        `).join("");
+
+        lista.innerHTML = `
+  <div class="tabela-chamados">
+
+    <div class="linha linha-cabecalho">
+      <div>ID</div>
+      <div>Título</div>
+      <div>Status</div>
+      <div>Criado em</div>
+    </div>
+
+    ${chamados.map((chamado) => `
+      
+      <div class="linha">
+
+        <div class="coluna-id">
+          ${chamado.id}
+        </div>
+
+        <div class="coluna-titulo">
+          ${chamado.titulo || "Sem título"}
+        </div>
+
+        <div>
+          <span class="status ${chamado.status}">
+            ${chamado.status.replace("_", " ")}
+          </span>
+        </div>
+
+        <div class="coluna-data">
+          ${chamado.criado_em || "Sem data"}
+        </div>
+
+      </div>
+
+    `).join("")}
+
+  </div>
+`;
+
+        `).join("")}
+
+  </div>
+`;
+
       } catch (erro) {
-        lista.innerHTML = "<p class='erro'>Não foi possível consultar a API.</p>";
+
+        lista.innerHTML =
+          "<p class='erro'>Não foi possível consultar a API.</p>";
+
       }
     }
 
-    document.getElementById("form-chamado").addEventListener("submit", async (evento) => {
-      evento.preventDefault();
 
-      const mensagem = document.getElementById("mensagem");
-      const dados = {
-        titulo: document.getElementById("titulo").value,
-        descricao: document.getElementById("descricao").value,
-        status: document.getElementById("status").value
-      };
 
-      try {
-        const resposta = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(dados)
-        });
 
-        if (!resposta.ok) {
+    document.getElementById("form-chamado")
+      .addEventListener("submit", async (evento) => {
+
+        evento.preventDefault();
+
+        const mensagem =
+          document.getElementById("mensagem");
+
+
+        const dados = {
+
+          titulo:
+            document.getElementById("titulo").value,
+
+          descricao:
+            document.getElementById("descricao").value,
+
+          status:
+            document.getElementById("status").value
+
+        };
+
+
+        try {
+
+          const resposta = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(dados)
+
+          });
+
+
+          if (!resposta.ok) {
+
+            mensagem.className = "erro";
+
+            mensagem.textContent =
+              "Erro ao cadastrar chamado.";
+
+            return;
+          }
+
+
+          mensagem.className = "sucesso";
+
+          mensagem.textContent =
+            "Chamado cadastrado com sucesso.";
+
+
+
+          document.getElementById("form-chamado").reset();
+
+
+
+          listarChamados();
+
+        } catch (erro) {
+
           mensagem.className = "erro";
-          mensagem.textContent = "Erro ao cadastrar chamado.";
-          return;
+
+          mensagem.textContent =
+            "A API não está disponível.";
+
         }
 
-        mensagem.className = "sucesso";
-        mensagem.textContent = "Chamado cadastrado com sucesso.";
-        document.getElementById("form-chamado").reset();
-        listarChamados();
-      } catch (erro) {
-        mensagem.className = "erro";
-        mensagem.textContent = "A API não está disponível.";
-      }
-    });
+      });
 
-    document.getElementById("atualizar").addEventListener("click", listarChamados);
+
+
+
+    document.getElementById("atualizar")
+      .addEventListener("click", listarChamados);
+
+
+
 
     listarChamados();
+
   </script>
 </body>
+
 </html>
