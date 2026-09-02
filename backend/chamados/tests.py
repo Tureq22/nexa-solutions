@@ -86,6 +86,12 @@ class FiltroChamadosporStatusTests(APITestCase):
         resposta = self.client.get(self.url)
 
         self.assertEqual(resposta.status_code, http_status.HTTP_200_OK)
+        self.assertEqual(len(resposta.data), 4)
+
+    def test_filtra_chamados_abertos(self):
+        resposta = self.client.get(self.url, {"status": "ABERTO"})
+
+        self.assertEqual(resposta.status_code, http_status.HTTP_200_OK)
         self.assertEqual(len(resposta.data), 2)
         for chamado in resposta.data:
             self.assertEqual(chamado["status"], Chamado.Status.ABERTO)

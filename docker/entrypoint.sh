@@ -22,7 +22,7 @@ for tentativa in range (1, 61):
         print(f"Tentativa {tentativa}/60 - banco indisponivel ainda.")
         time.sleep(1)
 
-print(f"Banco respondeu em {host}:{port}. Abortando.", file=sys.stderr)
+print(f"Banco não respondeu em {host}:{port}. Abortando.", file=sys.stderr)
 sys.exit(1)
 PY
 
